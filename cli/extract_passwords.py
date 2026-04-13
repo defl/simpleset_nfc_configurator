@@ -159,6 +159,15 @@ def main():
     result = extract_passwords(dll_path)
 
     if result is None:
+        # The user may have pointed us at the shim DLL — try the .original backup
+        original_path = dll_path + ".original"
+        if os.path.exists(original_path):
+            print("No password table found (this looks like the shim DLL).")
+            print(f"Trying original: {original_path}")
+            dll_path = original_path
+            result = extract_passwords(dll_path)
+
+    if result is None:
         print("Error: Password table not found in this DLL.")
         print("This may not be a Signify NfcCommandsHandler.dll, or it may use")
         print("a different password storage format.")
