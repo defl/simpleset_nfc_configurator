@@ -1,0 +1,43 @@
+# Private development files (RE notes, original binaries, test scripts)
+.private/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# PlatformIO build artifacts
+.pio/
+.vscode/
+
+# Compiled objects
+*.obj
+*.o
+*.exp
+*.lib
+*.pdb
+*.ilk
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Extracted passwords (user-specific, should not be committed)
+passwords.json
+*_passwords.json
+
+# Bridge runtime files
+multione_bridge.log
+multione_bridge.ini
+
+# Claude
+.claude/

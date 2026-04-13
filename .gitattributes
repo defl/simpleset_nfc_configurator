@@ -1,0 +1,18 @@
+# Images — treat as binary, enable LFS-ready tracking
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.svg text
+
+# Compiled binaries
+*.dll binary
+*.bin binary
+*.exe binary
+
+# Windows line endings for batch files
+*.bat text eol=crlf
+*.def text eol=crlf
+*.ini text eol=crlf

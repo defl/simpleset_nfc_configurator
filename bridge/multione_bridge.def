@@ -1,0 +1,27 @@
+; Module definition file for NfcCommandsHandler.dll shim
+; Exports match the original DLL's export table.
+;
+; __stdcall name decoration: MSVC uses @N suffix, but .NET P/Invoke with
+; CallingConvention.StdCall and ExactSpelling=false will find undecorated names.
+; We export undecorated names for maximum compatibility.
+
+LIBRARY NfcCommandsHandler
+
+EXPORTS
+    Connect                         @1
+    Disconnect                      @2
+    DetectDevice                    @3
+    IsConnected                     @4
+    ReadBlock                       @5
+    WriteBlock                      @6
+    ReadBlockSecurity               @7
+    ResetSecurity                   @8
+    SetOdmId                        @9
+    GetSupportedReaders             @10
+    SetSelectedReader               @11
+    GetDllVersion                   @12
+    GetFirmwareRevision             @13
+    GetHardwareName                 @14
+    GetHardwareVersion              @15
+    RefreshConnection               @16
+    FreeScanForReaderReturnValue    @17
