@@ -6,8 +6,8 @@ used by manufacturer configuration tools.
 
 Uses an ESP32 + PN5180 NFC module to read and write LED driver configuration
 (output current, device info, etc.) via the ISO 15693 NFC interface. Works
-standalone via the CLI tool, or as a drop-in replacement for the FEIG reader in
-Signify's [MultiOne](https://www.signify.com/global/support/tools/multione-configurator) software.
+standalone via the CLI tool, or as a read-only drop-in replacement for the FEIG
+reader in Signify's [MultiOne](https://www.signify.com/global/support/tools/multione-configurator) software.
 
 ![Bench Setup](resources/bench_setup.png)
 
