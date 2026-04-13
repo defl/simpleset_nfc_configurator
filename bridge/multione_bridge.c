@@ -711,6 +711,35 @@ __declspec(dllexport) int __cdecl ReadBlock(int block, char *reply) {
         return NFCRESULT_CONNECTION_ERROR;
     }
 
+    /* Synthetic responses for blocks beyond physical tag memory.
+     * The M24LR04E has 128 blocks (0-127). The tag directory maps the PWM
+     * memory bank (MB 38144/0x9500) to block 248, which doesn't physically
+     * exist. FeatureAoc.dll requires this bank to be readable (lock=0x55
+     * = unlocked) before it will write AOC data. The FEIG CPR30 reader
+     * somehow handles this; we synthesize valid memory bank data instead.
+     *
+     * PWM memory bank structure (block 248):
+     *   byte 0: length (0x04 = 4 data bytes after header)
+     *   byte 1: checksum (XOR of all other bytes = 0x50)
+     *   byte 2: lock byte (0x55 = unlocked)
+     *   byte 3: version (0x01)
+     * PWM data (block 249):
+     *   4 bytes of zeros (default/disabled PWM state)
+     */
+    if (block >= 128) {
+        if (reply) {
+            if (block == 248) {
+                strncpy(reply, "04505501", 8);
+            } else {
+                strncpy(reply, "00000000", 8);
+            }
+            reply[8] = '\0';
+        }
+        log_msg("ReadBlock: block %d = synthetic %s", block,
+                block == 248 ? "04505501 (PWM header)" : "00000000");
+        return NFCRESULT_OK;
+    }
+
     unsigned char payload[1] = { (unsigned char)(block & 0xFF) };
     char resp[REPLY_BUF_SIZE];
     int n = esp_cmd_with_data('R', payload, 1, resp, sizeof(resp));
@@ -725,8 +754,36 @@ __declspec(dllexport) int __cdecl ReadBlock(int block, char *reply) {
         if (reply) {
             strncpy(reply, hexdata, 8);
             reply[8] = '\0';
+
+            /* Unlock memory bank headers in-flight.
+             * MultiOne's ReadMemoryBankLayout() checks byte 2 (lock byte)
+             * of each memory bank header. If lock != 0x55 ("unlocked"),
+             * the bank is excluded from the writable set and writes are
+             * silently skipped. Factory tags ship with lock=0x00.
+             * We patch the lock byte to 0x55 so MultiOne will write AOC
+             * and other locked banks. Checksum (byte 1) is XOR of all
+             * other bytes in the bank, so flipping the lock byte requires:
+             *   new_cksum = old_cksum ^ old_lock ^ 0x55
+             * This is safe even when the block is not a MB header — the
+             * data is only used by MultiOne's layout parser for blocks it
+             * identifies as headers via the directory. We limit this to
+             * known MB header blocks to avoid unintended side effects. */
+            if (block == 48) { /* AOC memory bank header */
+                unsigned char b[4];
+                if (hex_to_bytes(reply, b, 4) == 4 && b[2] != 0x55) {
+                    unsigned char old_lock = b[2];
+                    unsigned char old_cksum = b[1];
+                    b[2] = 0x55;
+                    b[1] = old_cksum ^ old_lock ^ 0x55;
+                    sprintf(reply, "%02X%02X%02X%02X",
+                            b[0], b[1], b[2], b[3]);
+                    log_msg("ReadBlock: block %d lock byte patched "
+                            "0x%02X->0x55 (cksum 0x%02X->0x%02X): %s",
+                            block, old_lock, old_cksum, b[1], reply);
+                }
+            }
         }
-        log_msg("ReadBlock: block %d = %s", block, hexdata);
+        log_msg("ReadBlock: block %d = %s", block, reply);
         return NFCRESULT_OK;
     }
 
@@ -762,6 +819,13 @@ __declspec(dllexport) int __cdecl WriteBlock(int block, const char *values) {
     if (!values || strlen(values) < 8) {
         log_msg("WriteBlock: invalid values string (need 8 hex chars)");
         return NFCRESULT_DATA_ERROR;
+    }
+
+    /* Silently accept writes to synthetic blocks (>= 128) — they don't
+     * physically exist on the tag but MultiOne may try to write them. */
+    if (block >= 128) {
+        log_msg("WriteBlock: block %d = synthetic accept (not on physical tag)", block);
+        return NFCRESULT_OK;
     }
 
     unsigned char data[5]; /* block_num + 4 data bytes */

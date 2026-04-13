@@ -38,7 +38,7 @@ These drivers are readily available and inexpensive on eBay in the US
 |-----------|-------------|
 | [`firmware/`](firmware/) | ESP32+PN5180 bridge firmware (Arduino/PlatformIO) |
 | [`cli/`](cli/) | Standalone Python CLI to read/write SimpleSet driver config |
-| [`bridge/`](bridge/) | Drop-in DLL replacement so MultiOne works with the ESP32 firmware |
+| [`bridge/`](bridge/) | Drop-in DLL replacement so MultiOne works with the ESP32 firmware (read-only, see below) |
 
 ## Hardware Required
 
@@ -103,7 +103,16 @@ If your ESP32 board uses a CP2102 USB chip (most common):
 `setcurrent`, swap the next driver, run it again. No GUI, no waiting. You can
 program dozens of drivers in minutes.
 
-### Option B: Use with MultiOne
+### Option B: Use with MultiOne (read-only)
+
+> **⚠️ The MultiOne bridge is incomplete.** It allows MultiOne to detect and
+> read the driver via the ESP32, but **writing configuration (e.g. AOC current)
+> through MultiOne does not work yet**. MultiOne's internal write logic checks
+> memory bank lock bytes and other preconditions that the bridge cannot fully
+> satisfy without deeper reverse engineering of the .NET feature DLLs.
+>
+> **Use the CLI tool (Option A) to write configuration.** It writes directly to
+> the NFC tag and is fully working.
 
 1. Flash the ESP32 firmware
 2. Run the installer (extracts passwords + installs bridge automatically):
@@ -177,9 +186,6 @@ documentation — was written by AI (Claude, Anthropic). No human-written code;
 just prompting, testing, and directing. The reverse engineering, protocol
 analysis, and discovery of the password slot mutual exclusion behavior were all
 done through AI-guided experimentation.
-
-See [How This Project Was Built](#how-this-project-was-built) below for the full
-story.
 
 ## License
 

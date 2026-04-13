@@ -1,5 +1,12 @@
 # MultiOne Bridge — ESP32 NFC Driver for MultiOne
 
+> **⚠️ Status: Read-only.** The bridge allows MultiOne to detect and read
+> driver configuration, but **writing configuration through MultiOne does not
+> work**. MultiOne's .NET feature DLLs (e.g. `FeatureAoc.dll`) perform internal
+> checks on memory bank lock bytes and other preconditions before issuing
+> writes, and silently skip the write when those checks fail — even though the
+> UI reports "Success". Use the [CLI tool](../cli/) to write configuration.
+
 Drop-in replacement for the FEIG-based `NfcCommandsHandler.dll` in Signify
 MultiOne. Redirects all NFC operations to an ESP32+PN5180 over USB serial,
 allowing MultiOne to work with a ~$5 NFC reader instead of a
@@ -12,8 +19,7 @@ connection settings:
 
 ![Connection Settings](../resources/multione_connection_settings_screenshot.png)
 
-MultiOne works normally — reading device info, adjusting output current, and
-writing configuration, all through the ESP32:
+MultiOne can read device info and display configuration through the ESP32:
 
 ![MultiOne Running](../resources/multione_running_screenshot.png)
 
